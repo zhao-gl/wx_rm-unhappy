@@ -184,27 +184,28 @@ export default class MainMenu extends Emitter {
         const buttonWidth = 80; // 减小按钮宽度
         const buttonHeight = 30;  // 减小按钮高度
 
-        const continueBtn = {
+        const menuBtn = {
             width: buttonWidth,
             height: buttonHeight,
             x: cardX + (cardWidth - buttonWidth * 2 - 15) / 2,
             y: buttonY,
-            text: '下一关'
+            text: '主菜单'
         };
-        const menuBtn = {
+
+        const continueBtn = {
             width: buttonWidth,
             height: buttonHeight,
             x: cardX + (cardWidth - buttonWidth * 2 - 15) / 2 + buttonWidth + 15,
             y: buttonY,
-            text: '主菜单'
+            text: '下一关'
         };
 
-        this.drawButton(ctx, continueBtn);
         this.drawButton(ctx, menuBtn);
+        this.drawButton(ctx, continueBtn);
 
         // 存储按钮信息用于触摸事件检测
-        this.continueBtn = continueBtn;
         this.menuBtn = menuBtn;
+        this.continueBtn = continueBtn;
     }
 
     /**
@@ -360,13 +361,14 @@ export default class MainMenu extends Emitter {
             const buttonY = cardY + 80;
             const buttonWidth = 80;
 
-            const continueBtn = {
+            const menuBtn = {
                 width: buttonWidth,
                 height: 30,
                 x: cardX + (cardWidth - buttonWidth * 2 - 15) / 2,
                 y: buttonY
             };
-            const menuBtn = {
+
+            const continueBtn = {
                 width: buttonWidth,
                 height: 30,
                 x: cardX + (cardWidth - buttonWidth * 2 - 15) / 2 + buttonWidth + 15,
