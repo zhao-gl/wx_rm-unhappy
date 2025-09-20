@@ -18,7 +18,7 @@ GameGlobal.databus = new DataBus();
 
 // 加载背景图片
 const bgImage = wx.createImage();
-bgImage.src = 'images/bg.png';
+bgImage.src = 'resources/images/bg.png';
 bgImage.onload = () => {
     console.log('背景图片加载成功');
 };
@@ -36,6 +36,9 @@ export default class Main {
     mainMenu = new MainMenu();
 
     constructor() {
+        // 加载子包
+        this.loadSubpackage();
+
         // 注册Piece对象池
         GameGlobal.databus.pool.recover('piece', new Piece());
 
@@ -293,5 +296,24 @@ export default class Main {
             }
         }
         return true;
+    }
+
+    // 加载子包
+    loadSubpackage() {
+        const loadTask = wx.loadSubpackage({
+            name: 'resources',
+            success: (res) => {
+                console.log('子包加载成功', res);
+            },
+            fail: (err) => {
+                console.error('子包加载失败', err);
+                // 如果子包加载失败，可以考虑使用默认资源或提示用户
+            }
+        });
+
+        // 监听加载进度
+        loadTask.onProgressUpdate((res) => {
+            console.log('子包下载进度', res.progress);
+        });
     }
 }

@@ -7,12 +7,12 @@ const GRID_COLS = 6;
 const PIECE_SIZE = 60;
 // 使用项目中实际存在的图片
 const PIECE_TYPES = [
-  'images/angry.png',
-  'images/sad.png',
-  'images/happy.png',
-  'images/surprise.png',
-  'images/confused.png',
-  'images/wronged.png',
+  'resources/images/angry.png',
+  'resources/images/sad.png',
+  'resources/images/happy.png',
+  'resources/images/surprise.png',
+  'resources/images/confused.png',
+  'resources/images/wronged.png',
 ];
 
 export default class Grid {

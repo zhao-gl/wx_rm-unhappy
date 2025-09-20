@@ -1,3 +1,9 @@
 {
-  "deviceOrientation": "portrait"
+  "deviceOrientation": "portrait",
+  "subpackages": [
+    {
+      "root": "resources",
+      "name": "resources"
+    }
+  ]
 }
