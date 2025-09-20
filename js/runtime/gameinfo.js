@@ -1,9 +1,6 @@
 import Emitter from '../libs/tinyemitter';
 import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../render';
 
-const atlas = wx.createImage();
-atlas.src = 'images/Common.png';
-
 export default class GameInfo extends Emitter {
   constructor() {
     super();
