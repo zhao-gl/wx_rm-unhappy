@@ -320,7 +320,7 @@ export default class MainMenu extends Emitter {
      * 绘制加载进度条
      */
     drawLoadingProgress(ctx, centerX, y) {
-        const progressBarWidth = 200;
+        const progressBarWidth = SCREEN_WIDTH * 0.8
         const progressBarHeight = 12;
         const progressBarX = centerX - progressBarWidth / 2;
         const progressBarY = y;
@@ -329,12 +329,19 @@ export default class MainMenu extends Emitter {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         this.drawRoundedRect(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, 6, 'rgba(255, 255, 255, 0.2)');
 
-        // 绘制进度条填充 - 优化数值计算和显示
-        const clampedProgress = Math.min(100, Math.max(0, this.loadProgress));
-        const progressWidth = (progressBarWidth * clampedProgress) / 100;
-        if (progressWidth > 0) {
-            // 使用渐变色彩增强视觉效果
-            const gradient = ctx.createLinearGradient(progressBarX, 0, progressBarX + progressWidth, 0);
+        // 绘制进度条填充 - 优化移动端显示
+        // 确保使用有效的进度值
+        let displayProgress = 0;
+        if (typeof this.loadProgress === 'number' && !isNaN(this.loadProgress)) {
+            displayProgress = Math.min(100, Math.max(0, this.loadProgress));
+        }
+
+        const progressWidth = (progressBarWidth * displayProgress) / 100;
+        // 使用渐变色彩增强视觉效果，修复移动端渐变显示问题
+        const gradient = ctx.createLinearGradient(progressBarX, progressBarY, progressBarX + Math.max(1, progressWidth), progressBarY);
+        if (progressWidth > 0) { // 只有在进度大于0时才绘制
+            // 使用渐变色彩增强视觉效果，修复移动端渐变显示问题
+            const gradient = ctx.createLinearGradient(progressBarX, progressBarY, progressBarX + Math.max(1, progressWidth), progressBarY);
             gradient.addColorStop(0, '#4CAF50');
             gradient.addColorStop(1, '#8BC34A');
             ctx.fillStyle = gradient;
@@ -350,19 +357,20 @@ export default class MainMenu extends Emitter {
         }
 
         // 绘制进度文本 - 优化显示格式
-        ctx.font = '12px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+        ctx.font = '12px Arial, "PingFang SC", "Microsoft YaHei", "SimHei", sans-serif';
         ctx.fillStyle = '#ffffff';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // 使用固定宽度确保数字变化时不会跳动
-        const progressText = `资源加载中...`;
-        ctx.fillText(progressText, centerX, y - 15);
-
-        // 添加更直观的进度数字显示在进度条上方
-        ctx.font = '10px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+        // 添加更直观的进度数字显示在进度条中间，提高可读性
+        ctx.font = '10px Arial, "PingFang SC", "Microsoft YaHei", "SimHei", sans-serif';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`${Math.round(clampedProgress)}%`, centerX, y + progressBarHeight / 2);
+        // 添加描边以增强在不同背景下的可读性
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.lineWidth = 2;
+        const progressDisplay = `${Math.round(displayProgress)}%`;
+        ctx.strokeText(progressDisplay, centerX, y + progressBarHeight / 2);
+        ctx.fillText(progressDisplay, centerX, y + progressBarHeight / 2);
     }
 
     /**

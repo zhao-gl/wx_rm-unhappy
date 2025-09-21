@@ -505,8 +505,12 @@ export default class Main {
             // 监听加载进度
             loadTask.onProgressUpdate((res) => {
                 console.log('子包下载进度', res.progress);
+                let progress = res.progress;
+                if(progress >= 0 && progress < 1){
+                    progress = progress * 100;
+                }
                 // 确保进度值在有效范围内
-                this.loadProgress = Math.min(100, Math.max(0, res.progress));
+                this.loadProgress = Math.min(100, Math.max(0, progress));
                 if (this.mainMenu) {
                     this.mainMenu.loadProgress = this.loadProgress;
                 }
