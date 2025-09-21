@@ -34,6 +34,7 @@ export default class Main {
     grid = null; // 初始化为null，等待子包加载完成后创建
     gameInfo = new GameInfo();
     mainMenu = new MainMenu();
+    showBackConfirmDialog = false; // 是否显示返回确认弹窗
 
     constructor() {
         // 初始化加载进度
@@ -92,9 +93,34 @@ export default class Main {
     initTouchEvent() {
         wx.onTouchStart((e) => {
             const { clientX, clientY } = e.touches[0];
+            // 处理确认弹窗中的按钮点击
+            if (this.showBackConfirmDialog) {
+                // 检查取消按钮
+                if (clientX >= this.cancelBackButton.x &&
+                    clientX <= this.cancelBackButton.x + this.cancelBackButton.width &&
+                    clientY >= this.cancelBackButton.y &&
+                    clientY <= this.cancelBackButton.y + this.cancelBackButton.height) {
+                    // 隐藏确认弹窗
+                    this.showBackConfirmDialog = false;
+                    return;
+                }
+
+                // 检查确认按钮
+                if (clientX >= this.confirmBackButton.x &&
+                    clientX <= this.confirmBackButton.x + this.confirmBackButton.width &&
+                    clientY >= this.confirmBackButton.y &&
+                    clientY <= this.confirmBackButton.y + this.confirmBackButton.height) {
+                    // 隐藏确认弹窗并返回主菜单
+                    this.showBackConfirmDialog = false;
+                    this.showMainMenu();
+                    return;
+                }
+            }
+
             if (GameGlobal.databus.gameState === 'playing') {
                 if (this.isPointInBackButton(clientX, clientY)) {
-                    this.showMainMenu();
+                    // 显示确认弹窗而不是直接返回主菜单
+                    this.showBackConfirmDialog = true;
                     return;
                 }
                 this.grid.handleTouchStart(clientX, clientY);
@@ -223,6 +249,133 @@ export default class Main {
                 ani.render(ctx);
             }
         });
+
+        // 绘制返回确认弹窗（如果需要显示）
+        this.drawBackConfirmDialog(ctx)
+    }
+
+    // 绘制返回确认弹窗
+    drawBackConfirmDialog(ctx) {
+        if (!this.showBackConfirmDialog) return;
+
+        const dialogWidth = 240;
+        const dialogHeight = 120;
+        const dialogX = (SCREEN_WIDTH - dialogWidth) / 2;
+        const dialogY = (SCREEN_HEIGHT - dialogHeight) / 2;
+
+        // 绘制半透明遮罩
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+        // 绘制对话框背景
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        this.drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 10, 'rgba(255, 255, 255, 0.95)');
+
+        // 绘制边框
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+        ctx.lineWidth = 1;
+        this.strokeRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 10);
+
+        // 绘制标题
+        ctx.font = 'bold 16px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+        ctx.fillStyle = '#333333';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('确认返回主菜单', dialogX + dialogWidth / 2, dialogY + 30);
+
+        // 绘制提示文本
+        ctx.font = '14px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+        ctx.fillStyle = '#666666';
+        ctx.fillText('确定要返回主菜单吗？', dialogX + dialogWidth / 2, dialogY + 60);
+
+        // 绘制按钮
+        const buttonWidth = 70;
+        const buttonHeight = 30;
+        const buttonY = dialogY + dialogHeight - 40;
+
+        this.cancelBackButton = {
+            width: buttonWidth,
+            height: buttonHeight,
+            x: dialogX + dialogWidth / 2 - buttonWidth - 10,
+            y: buttonY,
+            text: '取消'
+        };
+
+        this.confirmBackButton = {
+            width: buttonWidth,
+            height: buttonHeight,
+            x: dialogX + dialogWidth / 2 + 10,
+            y: buttonY,
+            text: '确定'
+        };
+
+        this.drawButton(ctx, this.cancelBackButton);
+        this.drawButton(ctx, this.confirmBackButton);
+    }
+
+    // 绘制圆角矩形
+    drawRoundedRect(ctx, x, y, width, height, radius, fillColor) {
+        ctx.fillStyle = fillColor;
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    // 绘制圆角矩形边框
+    strokeRoundedRect(ctx, x, y, width, height, radius) {
+        ctx.beginPath();
+        ctx.moveTo(x + radius, y);
+        ctx.lineTo(x + width - radius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+        ctx.lineTo(x + width, y + height - radius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+        ctx.lineTo(x + radius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+        ctx.lineTo(x, y + radius);
+        ctx.quadraticCurveTo(x, y, x + radius, y);
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    // 绘制按钮
+    drawButton(ctx, button) {
+        // 保存当前状态
+        ctx.save();
+
+        // 按钮阴影
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+        this.drawRoundedRect(ctx, button.x + 1, button.y + 1, button.width, button.height, 6, 'rgba(0, 0, 0, 0.1)');
+
+        // 按钮背景
+        const buttonColor = button.text === '确定' ? '#4CAF50' : '#ff9800';
+        this.drawRoundedRect(ctx, button.x, button.y, button.width, button.height, 6, buttonColor);
+
+        // 按钮边框
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 1;
+        this.strokeRoundedRect(ctx, button.x, button.y, button.width, button.height, 6);
+
+        // 按钮文字
+        ctx.font = 'bold 14px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#ffffff';
+
+        const centerX = button.x + button.width / 2;
+        const centerY = button.y + button.height / 2;
+        ctx.fillText(button.text, centerX, centerY);
+
+        // 恢复状态
+        ctx.restore();
     }
 
     update() {
