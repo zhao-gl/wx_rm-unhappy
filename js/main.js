@@ -31,13 +31,37 @@ bgImage.onerror = (err) => {
  */
 export default class Main {
     aniId = 0;
-    grid = new Grid(); // 直接创建，不需要动态加载
+    grid = null; // 初始化为null，等待子包加载完成后创建
     gameInfo = new GameInfo();
     mainMenu = new MainMenu();
 
     constructor() {
-        // 加载子包
-        this.loadSubpackage();
+        // 初始化加载进度
+        this.loadProgress = 0;
+        this.isLoading = true;
+
+        // 先创建mainMenu实例，以便可以更新进度
+        this.mainMenu = new MainMenu();
+
+        // 加载子包并等待加载完成后再初始化游戏
+        this.loadSubpackage()
+            .then(() => {
+                // 子包加载成功后初始化游戏相关内容
+                this.isLoading = false;
+                this.initializeGame();
+            })
+            .catch((err) => {
+                console.error('子包加载失败:', err);
+                // 即使子包加载失败也初始化游戏，使用默认资源
+                this.isLoading = false;
+                this.initializeGame();
+            });
+    }
+
+    // 初始化游戏相关内容
+    initializeGame() {
+        // 创建Grid对象
+        this.grid = new Grid();
 
         // 注册Piece对象池
         GameGlobal.databus.pool.recover('piece', new Piece());
@@ -58,6 +82,7 @@ export default class Main {
 
     // 检查点是否在返回按钮内
     isPointInBackButton(x, y) {
+        if(!this.grid) return false;
         const button = this.grid.backButton;
         return x >= button.x && x <= button.x + button.width &&
             y >= button.y && y <= button.y + button.height;
@@ -189,7 +214,7 @@ export default class Main {
     }
 
     renderGameContent(ctx) {
-        this.grid.render(ctx);
+        if(this.grid) this.grid.render(ctx);
         this.gameInfo.render(ctx);
 
         GameGlobal.databus.animations.forEach((ani) => {
@@ -206,14 +231,14 @@ export default class Main {
 
             // 关键修复：始终调用grid.update()驱动方块动画
             // 即使通关也需要继续更新，直到所有动画完成
-            this.grid.update();
+            if(this.grid) this.grid.update();
 
             // 检查关卡是否完成，如果是则切换状态
             if (GameGlobal.databus.isLevelComplete) {
                 // 计算通关后的等待时间
                 const levelCompleteTime = GameGlobal.databus.levelCompleteTime || Date.now();
                 const waitTime = Date.now() - levelCompleteTime;
-                const MAX_WAIT_TIME = 2000; // 减少到2秒，更快响应
+                const MAX_WAIT_TIME = 5000; // 减少到2秒，更快响应
 
                 // 检查是否还有动画在进行中
                 const hasActiveAnimations = GameGlobal.databus.animations.some(ani => ani.isPlaying);
@@ -300,20 +325,37 @@ export default class Main {
 
     // 加载子包
     loadSubpackage() {
-        const loadTask = wx.loadSubpackage({
-            name: 'resources',
-            success: (res) => {
-                console.log('子包加载成功', res);
-            },
-            fail: (err) => {
-                console.error('子包加载失败', err);
-                // 如果子包加载失败，可以考虑使用默认资源或提示用户
-            }
-        });
+        return new Promise((resolve, reject) => {
+            const loadTask = wx.loadSubpackage({
+                name: 'resources',
+                success: (res) => {
+                    console.log('子包加载成功', res);
+                    this.loadProgress = 100;
+                    if (this.mainMenu) {
+                        this.mainMenu.loadProgress = 100;
+                    }
+                    this.isLoading = false;
+                    resolve(res);
+                },
+                fail: (err) => {
+                    console.error('子包加载失败', err);
+                    this.loadProgress = 0;
+                    if (this.mainMenu) {
+                        this.mainMenu.loadProgress = 0;
+                    }
+                    this.isLoading = false;
+                    reject(err);
+                }
+            });
 
-        // 监听加载进度
-        loadTask.onProgressUpdate((res) => {
-            console.log('子包下载进度', res.progress);
+            // 监听加载进度
+            loadTask.onProgressUpdate((res) => {
+                console.log('子包下载进度', res.progress);
+                this.loadProgress = res.progress;
+                if (this.mainMenu) {
+                    this.mainMenu.loadProgress = res.progress;
+                }
+            });
         });
     }
 }

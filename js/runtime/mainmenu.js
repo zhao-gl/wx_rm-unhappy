@@ -9,6 +9,9 @@ export default class MainMenu extends Emitter {
     constructor() {
         super();
 
+        // 添加加载进度属性
+        this.loadProgress = 0;
+
         // 按钮配置
         this.startButton = {
             width: 180,
@@ -118,11 +121,25 @@ export default class MainMenu extends Emitter {
         // 绘制游戏说明
         this.drawGameDescription(ctx, centerX, SCREEN_HEIGHT / 2 - 30);
 
-        // 绘制开始游戏按钮
-        this.drawButton(ctx, this.startButton);
+        // 绘制加载进度条（如果正在加载）
+        if (this.loadProgress < 100) {
+            this.drawLoadingProgress(ctx, centerX, SCREEN_HEIGHT / 2 + 130);
+        }
 
-        // 绘制退出游戏按钮
-        this.drawButton(ctx, this.exitButton);
+        // 绘制开始游戏按钮（仅在加载完成后显示）
+        if (this.loadProgress >= 100) {
+            this.drawButton(ctx, this.startButton);
+        } else {
+            // 在加载过程中显示一个"加载中"的提示
+            ctx.font = '16px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillText('资源加载中，请稍候...', centerX, SCREEN_HEIGHT / 2 + 80);
+        }
+
+        // 绘制退出游戏按钮（仅在加载完成后显示）
+        if (this.loadProgress >= 100) {
+            this.drawButton(ctx, this.exitButton);
+        }
 
         // 绘制版本信息
         this.drawVersionInfo(ctx, centerX);
@@ -297,6 +314,40 @@ export default class MainMenu extends Emitter {
         ctx.font = '12px Arial, "Microsoft YaHei", "SimHei", sans-serif';
         ctx.fillStyle = '#888888';
         ctx.fillText('版本 1.0.0', centerX, SCREEN_HEIGHT - 30);
+    }
+
+    /**
+     * 绘制加载进度条
+     */
+    drawLoadingProgress(ctx, centerX, y) {
+        const progressBarWidth = 200;
+        const progressBarHeight = 12;
+        const progressBarX = centerX - progressBarWidth / 2;
+        const progressBarY = y;
+
+        // 绘制进度条背景
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+        this.drawRoundedRect(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, 6, 'rgba(255, 255, 255, 0.2)');
+
+        // 绘制进度条填充
+        const progressWidth = (progressBarWidth - 4) * (this.loadProgress / 100);
+        if (progressWidth > 0) {
+            ctx.fillStyle = '#4CAF50';
+            this.drawRoundedRect(
+                ctx,
+                progressBarX + 2,
+                progressBarY + 2,
+                progressWidth,
+                progressBarHeight - 4,
+                4,
+                '#4CAF50'
+            );
+        }
+
+        // 绘制进度文本
+        ctx.font = '12px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`资源加载中... ${Math.round(this.loadProgress)}%`, centerX, y - 15);
     }
 
     /**
