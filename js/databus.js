@@ -13,6 +13,7 @@ export default class DataBus {
   score = 0; // 当前分数
   targetScore = 1000; // 目标分数
   level = 1; // 当前关卡
+  completedLevel = 0; // 已完成的关卡
   combo = 0; // 连续消除次数
   maxCombo = 0; // 最大连续数
   moves = 0; // 当前步数
@@ -31,7 +32,7 @@ export default class DataBus {
   }
 
   // 重置游戏状态
-  reset() {
+  reset(resetLevel = false) {
     this.frame = 0; // 当前帧数
     this.score = 0; // 当前分数
     this.combo = 0; // 连续消除次数
@@ -43,7 +44,7 @@ export default class DataBus {
     this.noMoreMatches = false; // 重置无更多匹配标志
 
     // 只有在游戏重新开始时才重置关卡，关卡完成后不重置
-    if (this.isGameOver || this.level === undefined) {
+    if (resetLevel || this.isGameOver || this.level === undefined) {
       this.level = 1;
     }
 
@@ -150,6 +151,7 @@ export default class DataBus {
     // 立即标记关卡完成，但不立即切换状态
     this.isLevelComplete = true;
     this.levelCompleteTime = Date.now(); // 记录通关时间
+    this.completedLevel = this.level; // 记录完成的关卡
 
     console.log('关卡完成！当前分数:', this.score, '目标分数:', this.targetScore);
 
@@ -175,7 +177,7 @@ export default class DataBus {
   // 开始游戏
   startGame() {
     this.gameState = 'playing';
-    this.reset();
+    this.reset(true); // 传递true以重置关卡
   }
 
   // 继续下一关
@@ -191,5 +193,6 @@ export default class DataBus {
     this.isGameOver = false;
     this.isLevelComplete = false;
     this.level = 1;
+    this.reset(true);  // 传递true以重置关卡
   }
 }

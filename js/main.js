@@ -238,7 +238,7 @@ export default class Main {
                 // 计算通关后的等待时间
                 const levelCompleteTime = GameGlobal.databus.levelCompleteTime || Date.now();
                 const waitTime = Date.now() - levelCompleteTime;
-                const MAX_WAIT_TIME = 5000; // 减少到2秒，更快响应
+                const MAX_WAIT_TIME = 5000; // 最大等待时间，超时后强制显示弹窗
 
                 // 检查是否还有动画在进行中
                 const hasActiveAnimations = GameGlobal.databus.animations.some(ani => ani.isPlaying);
@@ -274,17 +274,15 @@ export default class Main {
                     if (hasMatchAnimations) break;
                 }
 
-                // 检查是否还有挂起的消除相关timeout任务
-                const hasPendingTimeouts = this.grid.pendingTimeouts && this.grid.pendingTimeouts.length > 0;
-
                 // 检查网格是否已填满
                 const isGridFull = this.isGridFull();
 
                 // 在所有动画完成且网格填满时立即弹窗，或者超时时切换状态
-                if ((!hasActiveAnimations && !hasMovingPieces && !hasMatchAnimations && !hasPendingTimeouts && isGridFull) || waitTime > MAX_WAIT_TIME) {
+                if ((!hasActiveAnimations && !hasMovingPieces && !hasMatchAnimations && isGridFull) || waitTime > MAX_WAIT_TIME) {
                     // 清理所有挂起的timeout任务
                     this.grid.clearPendingTimeouts();
                     GameGlobal.databus.gameState = 'levelCompleteMenu';
+                    GameGlobal.databus.completedLevel = GameGlobal.databus.level; // 记录完成的关卡
                     GameGlobal.databus.level++;
                     console.log('通关弹窗显示：所有动画完成且网格填满，当前状态:', GameGlobal.databus.gameState);
 
@@ -295,7 +293,6 @@ export default class Main {
                             hasActiveAnimations,
                             hasMovingPieces,
                             hasMatchAnimations,
-                            hasPendingTimeouts,
                             isGridFull,
                             waitTime: waitTime + 'ms'
                         });

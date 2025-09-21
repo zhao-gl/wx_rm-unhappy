@@ -194,7 +194,7 @@ export default class MainMenu extends Emitter {
         // 显示得分和关卡
         ctx.font = '13px Arial, "Microsoft YaHei", "SimHei", sans-serif';
         ctx.fillStyle = '#f39c12';
-        ctx.fillText(`第${GameGlobal.databus.level - 1}关  得分: ${GameGlobal.databus.score}`, centerX, statsY);
+        ctx.fillText(`第${GameGlobal.databus.completedLevel}关  得分: ${GameGlobal.databus.score}`, centerX, statsY);
 
         // 绘制按钮 - 更紧凑的布局
         const buttonY = statsY + 30;
