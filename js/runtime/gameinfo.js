@@ -59,6 +59,17 @@ export default class GameInfo extends Emitter {
       shadowColor: 'rgba(0, 0, 0, 0.2)'
     };
 
+    // 重新开始按钮位置 - 与提示按钮水平对齐但靠左
+    this.restartButton = {
+      x: SCREEN_WIDTH - 140, // 在提示按钮左侧
+      y: 195,
+      width: 55,
+      height: 30,
+      backgroundColor: '#e91e63',
+      borderRadius: 15,
+      shadowColor: 'rgba(0, 0, 0, 0.2)'
+    };
+
     // 绑定触摸事件
     wx.onTouchStart(this.touchEventHandler.bind(this))
   }
@@ -225,6 +236,39 @@ export default class GameInfo extends Emitter {
     ctx.restore();
   }
 
+  // 绘制重新开始按钮
+  renderRestartButton(ctx) {
+    const restart = this.restartButton;
+
+    // 保存当前状态
+    ctx.save();
+
+    // 绘制阴影
+    ctx.fillStyle = restart.shadowColor;
+    this.drawRoundedRect(ctx, restart.x + 2, restart.y + 2, restart.width, restart.height, restart.borderRadius, restart.shadowColor);
+
+    // 绘制按钮背景
+    this.drawRoundedRect(ctx, restart.x, restart.y, restart.width, restart.height, restart.borderRadius, restart.backgroundColor);
+
+    // 绘制边框
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 1;
+    this.strokeRoundedRect(ctx, restart.x, restart.y, restart.width, restart.height, restart.borderRadius);
+
+    // 绘制按钮文字
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 12px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    const centerX = restart.x + restart.width / 2;
+    const centerY = restart.y + restart.height / 2;
+    ctx.fillText('重开', centerX, centerY);
+
+    // 恢复状态
+    ctx.restore();
+  }
+
   render(ctx) {
     // 只在游戏进行中绘制UI元素
     if (GameGlobal.databus.gameState === 'playing') {
@@ -233,6 +277,7 @@ export default class GameInfo extends Emitter {
       this.renderStats(ctx);
       this.renderMoves(ctx); // 绘制步数信息
       this.renderHintButton(ctx); // 绘制提示按钮
+      this.renderRestartButton(ctx); // 绘制重新开始按钮
     }
 
     // 游戏结束时停止帧循环并显示游戏结束画面
@@ -528,6 +573,19 @@ export default class GameInfo extends Emitter {
         this.emit('hint');
         return;
       }
+    }
+
+    // 检查重新开始按钮点击
+    const restart = this.restartButton;
+    if (
+        clientX >= restart.x &&
+        clientX <= restart.x + restart.width &&
+        clientY >= restart.y &&
+        clientY <= restart.y + restart.height
+    ) {
+      // 触发重新开始事件
+      this.emit('restart');
+      return;
     }
 
     // 当前只有游戏结束时展示了UI，所以只处理游戏结束时的状态
