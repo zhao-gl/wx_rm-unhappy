@@ -184,6 +184,7 @@ export default class DataBus {
   continueGame() {
     this.gameState = 'playing';
     this.isLevelComplete = false;
+    this.level++; // 增加关卡数
     this.reset();
   }
 

@@ -283,7 +283,6 @@ export default class Main {
                     this.grid.clearPendingTimeouts();
                     GameGlobal.databus.gameState = 'levelCompleteMenu';
                     GameGlobal.databus.completedLevel = GameGlobal.databus.level; // 记录完成的关卡
-                    GameGlobal.databus.level++;
                     console.log('通关弹窗显示：所有动画完成且网格填满，当前状态:', GameGlobal.databus.gameState);
 
                     if (waitTime > MAX_WAIT_TIME) {
