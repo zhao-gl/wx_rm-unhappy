@@ -16,15 +16,8 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT } from './render';
 globalThis.GameGlobal = globalThis.GameGlobal || {};
 GameGlobal.databus = new DataBus();
 
-// 加载背景图片
-const bgImage = wx.createImage();
-bgImage.src = 'resources/images/bg.png';
-bgImage.onload = () => {
-    console.log('背景图片加载成功');
-};
-bgImage.onerror = (err) => {
-    console.error('背景图片加载失败:', err);
-};
+// 声明背景图片变量，但不在这里加载
+let bgImage = null;
 
 /**
  * 游戏主函数（简化版）
@@ -484,6 +477,15 @@ export default class Main {
                         this.mainMenu.loadProgress = 100;
                     }
                     this.isLoading = false;
+
+                    bgImage = wx.createImage();
+                    bgImage.src = 'resources/images/bg.png';
+                    bgImage.onload = () => {
+                        console.log('背景图片加载成功');
+                    };
+                    bgImage.onerror = (err) => {
+                        console.error('背景图片加载失败:', err);
+                    };
                     resolve(res);
                 },
                 fail: (err) => {
