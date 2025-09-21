@@ -40,6 +40,11 @@ export default class Grid {
     this.hintStartTime = 0; // 提示开始时间
     this.HINT_DURATION = 3000; // 提示显示时间3秒
 
+    // 重新排列提示相关状态
+    this.showingShuffleHint = false; // 是否正在显示重新排列提示
+    this.shuffleHintStartTime = 0; // 重新排列提示开始时间
+    this.SHUFFLE_HINT_DURATION = 2000; // 重新排列提示显示时间2秒
+
     // 返回主菜单按钮
     this.backButton = {
       x: 15,
@@ -642,6 +647,9 @@ export default class Grid {
       this.renderHintHighlight(ctx);
     }
 
+    // 绘制重新排列提示
+    this.renderShuffleHint(ctx);
+
     // 绘制返回主菜单按钮
     this.renderBackButton(ctx);
   }
@@ -856,6 +864,10 @@ export default class Grid {
   // 重新打乱方块
   shuffleGrid() {
     console.log('检测到没有可消除的方块，重新打乱...');
+
+    // 设置重新排列提示显示状态
+    this.showingShuffleHint = true;
+    this.shuffleHintStartTime = Date.now();
 
     // 收集所有方块类型
     const allTypes = [];
@@ -1082,6 +1094,47 @@ export default class Grid {
       );
       ctx.stroke();
     }
+
+    ctx.restore();
+  }
+
+  // 绘制重新排列提示
+  renderShuffleHint(ctx) {
+    // 检查是否需要显示提示以及是否超过显示时间
+    if (!this.showingShuffleHint || (Date.now() - this.shuffleHintStartTime) > this.SHUFFLE_HINT_DURATION) {
+      this.showingShuffleHint = false;
+      return;
+    }
+
+    ctx.save();
+
+    // 设置字体和样式
+    ctx.font = 'bold 24px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    // 计算透明度（淡入淡出效果）
+    const elapsed = Date.now() - this.shuffleHintStartTime;
+    let alpha = 1.0;
+
+    // 淡入效果（前0.5秒）
+    if (elapsed < 500) {
+      alpha = elapsed / 500;
+    }
+    // 淡出效果（最后0.5秒）
+    else if (elapsed > (this.SHUFFLE_HINT_DURATION - 500)) {
+      alpha = (this.SHUFFLE_HINT_DURATION - elapsed) / 500;
+    }
+
+    ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    ctx.strokeStyle = `rgba(0, 0, 0, ${alpha * 0.5})`;
+    ctx.lineWidth = 2;
+
+    // 绘制文本
+    const centerX = SCREEN_WIDTH / 2;
+    const centerY = SCREEN_HEIGHT / 2;
+    ctx.strokeText('重新排列中...', centerX, centerY);
+    ctx.fillText('重新排列中...', centerX, centerY);
 
     ctx.restore();
   }
