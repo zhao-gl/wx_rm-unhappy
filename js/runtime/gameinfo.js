@@ -70,6 +70,9 @@ export default class GameInfo extends Emitter {
       shadowColor: 'rgba(0, 0, 0, 0.2)'
     };
 
+    // 确认弹窗状态
+    this.showConfirmDialog = false;
+
     // 绑定触摸事件
     wx.onTouchStart(this.touchEventHandler.bind(this))
   }
@@ -269,6 +272,97 @@ export default class GameInfo extends Emitter {
     ctx.restore();
   }
 
+  // 绘制确认重新开始弹窗
+  drawConfirmDialog(ctx) {
+    if (!this.showConfirmDialog) return;
+
+    const dialogWidth = 240;
+    const dialogHeight = 120;
+    const dialogX = (SCREEN_WIDTH - dialogWidth) / 2;
+    const dialogY = (SCREEN_HEIGHT - dialogHeight) / 2;
+
+    // 绘制半透明遮罩
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+    ctx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+
+    // 绘制对话框背景
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+    this.drawRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 10, 'rgba(255, 255, 255, 0.95)');
+
+    // 绘制边框
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+    ctx.lineWidth = 1;
+    this.strokeRoundedRect(ctx, dialogX, dialogY, dialogWidth, dialogHeight, 10);
+
+    // 绘制标题
+    ctx.font = 'bold 16px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+    ctx.fillStyle = '#333333';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('确认重新开始', dialogX + dialogWidth / 2, dialogY + 30);
+
+    // 绘制提示文本
+    ctx.font = '14px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+    ctx.fillStyle = '#666666';
+    ctx.fillText('确定要重新开始本关吗？', dialogX + dialogWidth / 2, dialogY + 60);
+
+    // 绘制按钮
+    const buttonWidth = 70;
+    const buttonHeight = 30;
+    const buttonY = dialogY + dialogHeight - 40;
+
+    this.cancelButton = {
+      width: buttonWidth,
+      height: buttonHeight,
+      x: dialogX + dialogWidth / 2 - buttonWidth - 10,
+      y: buttonY,
+      text: '取消'
+    };
+
+    this.confirmRestartButton = {
+      width: buttonWidth,
+      height: buttonHeight,
+      x: dialogX + dialogWidth / 2 + 10,
+      y: buttonY,
+      text: '确定'
+    };
+
+    this.drawButton(ctx, this.cancelButton);
+    this.drawButton(ctx, this.confirmRestartButton);
+  }
+
+  // 绘制按钮
+  drawButton(ctx, button) {
+    // 保存当前状态
+    ctx.save();
+
+    // 按钮阴影
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+    this.drawRoundedRect(ctx, button.x + 1, button.y + 1, button.width, button.height, 6, 'rgba(0, 0, 0, 0.1)');
+
+    // 按钮背景
+    const buttonColor = button.text === '确定' ? '#4CAF50' : '#ff9800';
+    this.drawRoundedRect(ctx, button.x, button.y, button.width, button.height, 6, buttonColor);
+
+    // 按钮边框
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.lineWidth = 1;
+    this.strokeRoundedRect(ctx, button.x, button.y, button.width, button.height, 6);
+
+    // 按钮文字
+    ctx.font = 'bold 14px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#ffffff';
+
+    const centerX = button.x + button.width / 2;
+    const centerY = button.y + button.height / 2;
+    ctx.fillText(button.text, centerX, centerY);
+
+    // 恢复状态
+    ctx.restore();
+  }
+
   render(ctx) {
     // 只在游戏进行中绘制UI元素
     if (GameGlobal.databus.gameState === 'playing') {
@@ -278,6 +372,9 @@ export default class GameInfo extends Emitter {
       this.renderMoves(ctx); // 绘制步数信息
       this.renderHintButton(ctx); // 绘制提示按钮
       this.renderRestartButton(ctx); // 绘制重新开始按钮
+
+      // 绘制确认弹窗（如果需要显示）
+      this.drawConfirmDialog(ctx);
     }
 
     // 游戏结束时停止帧循环并显示游戏结束画面
@@ -576,16 +673,42 @@ export default class GameInfo extends Emitter {
     }
 
     // 检查重新开始按钮点击
-    const restart = this.restartButton;
-    if (
-        clientX >= restart.x &&
-        clientX <= restart.x + restart.width &&
-        clientY >= restart.y &&
-        clientY <= restart.y + restart.height
-    ) {
-      // 触发重新开始事件
-      this.emit('restart');
-      return;
+    if (GameGlobal.databus.gameState === 'playing' && !GameGlobal.databus.isGameOver) {
+      const restart = this.restartButton;
+      if (
+          clientX >= restart.x &&
+          clientX <= restart.x + restart.width &&
+          clientY >= restart.y &&
+          clientY <= restart.y + restart.height
+      ) {
+        // 显示确认弹窗
+        this.showConfirmDialog = true;
+        return;
+      }
+    }
+
+    // 处理确认弹窗中的按钮点击
+    if (this.showConfirmDialog) {
+      // 检查取消按钮
+      if (clientX >= this.cancelButton.x &&
+          clientX <= this.cancelButton.x + this.cancelButton.width &&
+          clientY >= this.cancelButton.y &&
+          clientY <= this.cancelButton.y + this.cancelButton.height) {
+        // 隐藏确认弹窗
+        this.showConfirmDialog = false;
+        return;
+      }
+
+      // 检查确认按钮
+      if (clientX >= this.confirmRestartButton.x &&
+          clientX <= this.confirmRestartButton.x + this.confirmRestartButton.width &&
+          clientY >= this.confirmRestartButton.y &&
+          clientY <= this.confirmRestartButton.y + this.confirmRestartButton.height) {
+        // 隐藏确认弹窗并触发重新开始事件
+        this.showConfirmDialog = false;
+        this.emit('restart');
+        return;
+      }
     }
 
     // 当前只有游戏结束时展示了UI，所以只处理游戏结束时的状态
