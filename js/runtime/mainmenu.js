@@ -329,25 +329,40 @@ export default class MainMenu extends Emitter {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         this.drawRoundedRect(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, 6, 'rgba(255, 255, 255, 0.2)');
 
-        // 绘制进度条填充
-        const progressWidth = (progressBarWidth - 4) * (this.loadProgress / 100);
+        // 绘制进度条填充 - 优化数值计算和显示
+        const clampedProgress = Math.min(100, Math.max(0, this.loadProgress));
+        const progressWidth = (progressBarWidth * clampedProgress) / 100;
         if (progressWidth > 0) {
-            ctx.fillStyle = '#4CAF50';
+            // 使用渐变色彩增强视觉效果
+            const gradient = ctx.createLinearGradient(progressBarX, 0, progressBarX + progressWidth, 0);
+            gradient.addColorStop(0, '#4CAF50');
+            gradient.addColorStop(1, '#8BC34A');
+            ctx.fillStyle = gradient;
             this.drawRoundedRect(
                 ctx,
-                progressBarX + 2,
-                progressBarY + 2,
+                progressBarX,
+                progressBarY,
                 progressWidth,
-                progressBarHeight - 4,
-                4,
-                '#4CAF50'
+                progressBarHeight,
+                6, // 与背景使用相同的圆角半径
+                gradient
             );
         }
 
-        // 绘制进度文本
+        // 绘制进度文本 - 优化显示格式
         ctx.font = '12px Arial, "Microsoft YaHei", "SimHei", sans-serif';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText(`资源加载中... ${Math.round(this.loadProgress)}%`, centerX, y - 15);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        // 使用固定宽度确保数字变化时不会跳动
+        const progressText = `资源加载中...`;
+        ctx.fillText(progressText, centerX, y - 15);
+
+        // 添加更直观的进度数字显示在进度条上方
+        ctx.font = '10px Arial, "Microsoft YaHei", "SimHei", sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`${Math.round(clampedProgress)}%`, centerX, y + progressBarHeight / 2);
     }
 
     /**

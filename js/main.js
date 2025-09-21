@@ -37,6 +37,9 @@ export default class Main {
         // 先创建mainMenu实例，以便可以更新进度
         this.mainMenu = new MainMenu();
 
+        // 立即启动渲染循环，显示加载界面
+        this.start();
+
         // 加载子包并等待加载完成后再初始化游戏
         this.loadSubpackage()
             .then(() => {
@@ -199,7 +202,7 @@ export default class Main {
             }
         }
 
-        if (bgImage.complete && bgImage.naturalWidth > 0) {
+        if (bgImage && bgImage.complete && bgImage.naturalWidth > 0) {
             const scaleX = SCREEN_WIDTH / bgImage.naturalWidth;
             const scaleY = SCREEN_HEIGHT / bgImage.naturalHeight;
             const scale = Math.max(scaleX, scaleY);
@@ -502,9 +505,10 @@ export default class Main {
             // 监听加载进度
             loadTask.onProgressUpdate((res) => {
                 console.log('子包下载进度', res.progress);
-                this.loadProgress = res.progress;
+                // 确保进度值在有效范围内
+                this.loadProgress = Math.min(100, Math.max(0, res.progress));
                 if (this.mainMenu) {
-                    this.mainMenu.loadProgress = res.progress;
+                    this.mainMenu.loadProgress = this.loadProgress;
                 }
             });
         });
