@@ -365,7 +365,7 @@ export default class GameInfo extends Emitter {
 
   render(ctx) {
     // 只在游戏进行中绘制UI元素
-    if (GameGlobal.databus.gameState === 'playing') {
+    if (GameGlobal.databus.gameState === 'playing' || GameGlobal.databus.gameState === 'levelCompleteMenu') {
       // 绘制进度条和分数信息
       this.renderProgressBar(ctx);
       this.renderStats(ctx);
