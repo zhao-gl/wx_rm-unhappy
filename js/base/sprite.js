@@ -33,10 +33,18 @@ export default class Sprite extends Emitter {
    */
   setImage(imgSrc) {
     this.isLoaded = false;
-    this.img.src = imgSrc;
-    this.img.onload = () => {
+    // 创建新的图片对象以确保正确加载
+    const newImg = wx.createImage();
+    newImg.onload = () => {
+      this.img = newImg;
       this.isLoaded = true;
     };
+    newImg.onerror = (err) => {
+      console.error('图片加载失败:', imgSrc, err);
+      // 保留原始图片对象，但标记为加载失败
+      this.isLoaded = false;
+    };
+    newImg.src = imgSrc;
   }
 
   /**
