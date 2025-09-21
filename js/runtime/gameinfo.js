@@ -233,7 +233,11 @@ export default class GameInfo extends Emitter {
 
     const centerX = hint.x + hint.width / 2;
     const centerY = hint.y + hint.height / 2;
-    ctx.fillText('提示', centerX, centerY);
+
+    // 显示提示文字和剩余次数
+    const databus = GameGlobal.databus;
+    const remainingHints = databus.getRemainingHints();
+    ctx.fillText(`提示(${remainingHints})`, centerX, centerY);
 
     // 恢复状态
     ctx.restore();
@@ -666,8 +670,18 @@ export default class GameInfo extends Emitter {
         clientY >= hint.y &&
         clientY <= hint.y + hint.height
       ) {
-        // 触发提示事件
-        this.emit('hint');
+        // 检查是否还有可用提示次数
+        if (GameGlobal.databus.hasAvailableHints()) {
+          // 触发提示事件
+          this.emit('hint');
+        } else {
+          // 没有可用提示次数，预留跳转广告逻辑
+          console.log('提示次数已用完，触发广告逻辑');
+          // 可以在这里触发广告逻辑
+          if (GameGlobal.databus.grid) {
+            GameGlobal.databus.grid.showAdForHint();
+          }
+        }
         return;
       }
     }

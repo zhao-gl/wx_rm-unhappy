@@ -18,6 +18,8 @@ export default class DataBus {
   maxCombo = 0; // 最大连续数
   moves = 0; // 当前步数
   maxMoves = 30; // 最大步数限制
+  hintsUsed = 0; // 已使用的提示次数
+  maxHints = 3; // 最大提示次数
   isGameOver = false; // 游戏是否结束
   isLevelComplete = false; // 关卡是否完成
   noMoreMatches = false; // 通关后是否没有更多可消除匹配
@@ -38,6 +40,7 @@ export default class DataBus {
     this.combo = 0; // 连续消除次数
     this.maxCombo = 0; // 最大连续数
     this.moves = 0; // 重置步数
+    this.hintsUsed = 0; // 重置提示次数
     this.animations = []; // 存储动画
     this.isGameOver = false; // 游戏是否结束
     this.isLevelComplete = false; // 关卡是否完成
@@ -108,6 +111,21 @@ export default class DataBus {
   isNearMoveLimit() {
     const remaining = this.getRemainingMoves();
     return remaining <= 5 && remaining > 0;
+  }
+
+  // 增加提示使用次数
+  useHint() {
+    this.hintsUsed++;
+  }
+
+  // 检查是否还有可用提示
+  hasAvailableHints() {
+    return this.hintsUsed < this.maxHints;
+  }
+
+  // 获取剩余提示次数
+  getRemainingHints() {
+    return Math.max(0, this.maxHints - this.hintsUsed);
   }
 
   // 增加分数

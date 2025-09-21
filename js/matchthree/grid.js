@@ -969,6 +969,17 @@ export default class Grid {
 
   // 显示提示
   showHint() {
+    // 检查是否还有可用提示次数
+    if (!GameGlobal.databus.hasAvailableHints()) {
+      console.log('提示次数已用完');
+      // 预留跳转广告逻辑
+      this.showAdForHint();
+      return;
+    }
+
+    // 增加提示使用次数
+    GameGlobal.databus.useHint();
+
     // 如果已经在显示提示，先清除
     if (this.showingHint) {
       this.clearHint();
@@ -1001,6 +1012,48 @@ export default class Grid {
   // 检查是否在提示中
   isHintPiece(row, col) {
     return this.hintPieces.some(piece => piece.row === row && piece.col === col);
+  }
+
+  // 显示广告以获取提示
+  showAdForHint() {
+    console.log('显示广告以获取更多提示');
+    // 这里预留跳转广告的逻辑
+    // 实际实现时可以调用微信广告API
+    // 示例代码：
+    /*
+    if (wx.createRewardedVideoAd) {
+      const rewardedVideoAd = wx.createRewardedVideoAd({
+        adUnitId: 'xxxxxxx' // 替换为实际的广告单元ID
+      });
+
+      rewardedVideoAd.onLoad(() => {
+        console.log('激励视频广告加载成功');
+      });
+
+      rewardedVideoAd.onError(err => {
+        console.log('激励视频广告加载失败', err);
+      });
+
+      rewardedVideoAd.onClose(res => {
+        if (res && res.isEnded) {
+          // 用户观看了完整视频，可以给予奖励
+          console.log('用户观看完整视频，增加提示次数');
+          GameGlobal.databus.hintsUsed = Math.max(0, GameGlobal.databus.hintsUsed - 1);
+        } else {
+          // 用户未观看完整视频
+          console.log('用户未观看完整视频');
+        }
+      });
+
+      rewardedVideoAd.show().catch(() => {
+        rewardedVideoAd.load()
+          .then(() => rewardedVideoAd.show())
+          .catch(err => {
+            console.log('激励视频广告显示失败', err);
+          });
+      });
+    }
+    */
   }
 
   // 绘制提示高亮效果
