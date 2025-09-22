@@ -1,9 +1,3 @@
-/**
- * 简化的分包加载解决方案
- * 直接在主包中包含必要的代码，避免复杂的动态导入
- */
-
-// 直接导入原来的模块，避免分包加载问题
 import Grid from './matchthree/grid.js';
 import Piece from './matchthree/piece.js';
 import './render';
@@ -18,6 +12,13 @@ GameGlobal.databus = new DataBus();
 
 // 声明背景图片变量，但不在这里加载
 let bgImage = null;
+// 添加背景绘制参数缓存
+let bgDrawParams = null;
+// 添加离屏canvas用于异步绘制背景
+let offscreenCanvas = null;
+let offscreenCtx = null;
+// 标记背景是否需要重新绘制
+let isBackgroundDirty = true;
 
 /**
  * 游戏主函数（简化版）
@@ -26,7 +27,7 @@ export default class Main {
     aniId = 0;
     grid = null; // 初始化为null，等待子包加载完成后创建
     gameInfo = new GameInfo();
-    mainMenu = new MainMenu();
+    // mainMenu = new MainMenu();
     showBackConfirmDialog = false; // 是否显示返回确认弹窗
 
     constructor() {
@@ -35,7 +36,7 @@ export default class Main {
         this.isLoading = true;
 
         // 先创建mainMenu实例，以便可以更新进度
-        this.mainMenu = new MainMenu();
+        this.mainMenu = new MainMenu(this.loadProgress);
 
         // 立即启动渲染循环，显示加载界面
         this.start();
@@ -139,6 +140,11 @@ export default class Main {
 
     showMainMenu() {
         GameGlobal.databus.gameState = 'mainMenu';
+        // 确保主菜单的加载进度保持正确状态
+        console.log('主菜单加载进度:', this.loadProgress)
+        if (this.mainMenu && !this.isLoading) {
+            this.mainMenu.loadProgress = this.loadProgress;
+        }
         cancelAnimationFrame(this.aniId);
         this.aniId = requestAnimationFrame(this.loop.bind(this));
     }
@@ -479,15 +485,15 @@ export default class Main {
                     if (this.mainMenu) {
                         this.mainMenu.loadProgress = 100;
                     }
-                    this.isLoading = false;
-
                     bgImage = wx.createImage();
                     bgImage.src = 'resources/images/bg.png';
                     bgImage.onload = () => {
                         console.log('背景图片加载成功');
+                        this.isLoading = false;
                     };
                     bgImage.onerror = (err) => {
                         console.error('背景图片加载失败:', err);
+                        this.isLoading = false;
                     };
                     resolve(res);
                 },
@@ -506,7 +512,7 @@ export default class Main {
             loadTask.onProgressUpdate((res) => {
                 console.log('子包下载进度', res.progress);
                 let progress = res.progress;
-                if(progress >= 0 && progress < 1){
+                if(progress >= 0 && progress <= 1){
                     progress = progress * 100;
                 }
                 // 确保进度值在有效范围内

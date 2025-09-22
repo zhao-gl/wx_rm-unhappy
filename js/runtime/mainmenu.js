@@ -6,11 +6,11 @@ import { SCREEN_WIDTH, SCREEN_HEIGHT } from '../render';
  * 负责显示游戏主菜单界面，包括开始游戏、游戏标题等
  */
 export default class MainMenu extends Emitter {
-    constructor() {
+    constructor(initialLoadProgress = 0) {
         super();
 
         // 添加加载进度属性
-        this.loadProgress = 0;
+        this.loadProgress = initialLoadProgress;
 
         // 按钮配置
         this.startButton = {
