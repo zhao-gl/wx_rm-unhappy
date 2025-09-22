@@ -12,13 +12,6 @@ GameGlobal.databus = new DataBus();
 
 // 声明背景图片变量，但不在这里加载
 let bgImage = null;
-// 添加背景绘制参数缓存
-let bgDrawParams = null;
-// 添加离屏canvas用于异步绘制背景
-let offscreenCanvas = null;
-let offscreenCtx = null;
-// 标记背景是否需要重新绘制
-let isBackgroundDirty = true;
 
 /**
  * 游戏主函数（简化版）
@@ -514,6 +507,10 @@ export default class Main {
                 let progress = res.progress;
                 if(progress >= 0 && progress <= 1){
                     progress = progress * 100;
+                }
+                // 处理加载进度超出1后变成负数的情况
+                if(progress < 0){
+                    progress = 100;
                 }
                 // 确保进度值在有效范围内
                 this.loadProgress = Math.min(100, Math.max(0, progress));
